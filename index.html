@@ -47,12 +47,12 @@
 
       <p id="waitHash" class="text-xs text-emerald-400 mt-2"></p>
 
-      <div id="waitlist" class="grid md:grid-cols-2 gap-4 mt-6"></div>
+      <!-- <div id="waitlist" class="grid md:grid-cols-2 gap-4 mt-6"></div>
 
       <div class="flex gap-2 mt-4">
         <input id="removeHash" placeholder="Your Hash" class="bg-slate-800 p-2 rounded flex-1">
         <button onclick="removeWait()" class="bg-red-600 px-4 rounded">Remove</button>
-      </div>
+      </div> -->
     </section>
 
   </main>
@@ -67,6 +67,15 @@
   </footer>
 
   <script>
+    const oreIcons = {
+      MOONSHELL_NORMAL: "https://wsrv.nl/?output=webp&url=https://garrytools.com/assets/img/survivor/4.4.0/UITexture/LabourDay/LabourMain/product_1.png",
+      MOONSHELL_FINE: "https://wsrv.nl/?output=webp&url=https://garrytools.com/assets/img/survivor/4.4.0/UITexture/LabourDay/LabourMain/product_2.png",
+      MOONSEA_SUPERIOR: "https://wsrv.nl/?output=webp&url=https://garrytools.com/assets/img/survivor/4.4.0/UITexture/LabourDay/LabourMain/product_3.png",
+      MOONSEA_EXCELLENT: "https://wsrv.nl/?output=webp&url=https://garrytools.com/assets/img/survivor/4.4.0/UITexture/LabourDay/LabourMain/product_4.png",
+      MOONVEIL_EPIC: "https://wsrv.nl/?output=webp&url=https://garrytools.com/assets/img/survivor/4.4.0/UITexture/LabourDay/LabourMain/product_5.png",
+      MOONCORE_LEGEND: "https://wsrv.nl/?output=webp&url=https://garrytools.com/assets/img/survivor/4.4.0/UITexture/LabourDay/LabourMain/product_6.png",
+    };
+
     const API = "https://lunarminesale-production.up.railway.app";
     const oreRules = {
       MOONSHELL_NORMAL: { min: 225, max: 250 },
@@ -122,23 +131,20 @@
       const d = await r.json();
 
       offers.innerHTML = d.map(o => `
-        <div class="bg-slate-900 p-4 rounded border border-slate-800 flex justify-between items-center">
-          <div>
+        <div class="bg-slate-900 p-4 rounded border border-slate-800 flex gap-4 items-center">
+          <img src="${oreIcons[o.oreType]}" class="w-14 h-14" />
+          
+          <div class="flex-1">
             <b>${o.oreType.replaceAll("_", " ")}</b>
             <p class="text-sm text-slate-400">Player: ${o.playerId}</p>
             <p class="text-indigo-400 font-bold">${o.price} coins</p>
           </div>
 
           <div class="flex flex-col gap-1 text-sm">
-            <button
-              onclick="vote(${o.id}, 'up')"
-              class="bg-emerald-600/20 hover:bg-emerald-600/40 px-2 rounded">
+            <button onclick="vote(${o.id}, 'up')" class="bg-emerald-600/20 px-2 rounded">
               ⬆ ${o.upVotes}
             </button>
-
-            <button
-              onclick="vote(${o.id}, 'down')"
-              class="bg-red-600/20 hover:bg-red-600/40 px-2 rounded">
+            <button onclick="vote(${o.id}, 'down')" class="bg-red-600/20 px-2 rounded">
               ⬇ ${o.downVotes}
             </button>
           </div>
@@ -160,13 +166,14 @@
       const r = await fetch(API + "/waitlist");
       const d = await r.json();
       waitlist.innerHTML = d.map(w => `
-<div class="bg-slate-800 p-3 rounded">
-<b>${w.oreType.replaceAll("_", " ")}</b><br>
-Player: ${w.playerId}
-</div>`).join("");
+        <div class="bg-slate-800 p-3 rounded">
+        <b>${w.oreType.replaceAll("_", " ")}</b><br>
+        Player: ${w.playerId}
+        </div>`).join("");
     }
 
-    loadOffers(); loadWait();
+    loadOffers(); 
+    //loadWait();
   </script>
 
 </body>
