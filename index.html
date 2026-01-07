@@ -127,13 +127,39 @@
     }
 
     async function loadOffers() {
-      const r = await fetch(API + "/offers");
-      const d = await r.json();
+  const r = await fetch(API + "/offers");
+  const data = await r.json();
 
-      offers.innerHTML = d.map(o => `
+  // 1️⃣ Agrupar por oreType
+  const grouped = data.reduce((acc, offer) => {
+    if (!acc[offer.oreType]) acc[offer.oreType] = [];
+    acc[offer.oreType].push(offer);
+    return acc;
+  }, {});
+
+  // 2️⃣ Ordenar cada grupo do maior preço → menor
+  Object.values(grouped).forEach(group => {
+    group.sort((a, b) => b.price - a.price);
+  });
+
+  // 3️⃣ Renderizar
+  offers.innerHTML = Object.keys(grouped).map(oreType => `
+    <div class="space-y-2">
+      
+      <!-- Header do Ore -->
+      <div class="flex items-center gap-3 mt-4">
+        <img src="${oreIcons[oreType]}" class="w-8 h-8">
+        <h3 class="text-md font-semibold text-indigo-400">
+          ${oreType.replaceAll("_", " ")}
+        </h3>
+      </div>
+
+      <!-- Offers do Ore -->
+      ${grouped[oreType].map(o => `
         <div class="bg-slate-900 p-4 rounded border border-slate-800 flex gap-4 items-center">
-          <img src="${oreIcons[o.oreType]}" class="w-14 h-14" />
           
+          <img src="${oreIcons[o.oreType]}" class="w-14 h-14" />
+
           <div class="flex-1">
             <b>${o.oreType.replaceAll("_", " ")}</b>
             <p class="text-sm text-slate-400">Player: ${o.playerId}</p>
@@ -148,9 +174,14 @@
               ⬇ ${o.downVotes}
             </button>
           </div>
+
         </div>
-      `).join("");
-    }
+      `).join("")}
+
+    </div>
+  `).join("");
+}
+
 
     async function vote(id, type) {
       await fetch(`${API}/offers/${id}/vote`, {
@@ -179,3 +210,4 @@
 </body>
 
 </html>
+
