@@ -89,7 +89,7 @@
 
     Object.keys(oreRules).forEach(o => {
       oreType.innerHTML += `<option value="${o}">${o.replaceAll("_", " ")}</option>`;
-      waitOre.innerHTML += `<option value="${o}">${o.replaceAll("_", " ")}</option>`;
+      //waitOre.innerHTML += `<option value="${o}">${o.replaceAll("_", " ")}</option>`;
     });
 
     oreType.onchange = () => {
@@ -236,5 +236,6 @@
 </body>
 
 </html>
+
 
 
