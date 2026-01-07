@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Survivor.io – Lunar Mine Sale</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 font-[Inter]">
+
+  <!-- Header -->
+  <header class="border-b border-slate-800 bg-slate-900/60 backdrop-blur sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+      <h1 class="text-xl font-bold">🌙 Lunar Mine Sale</h1>
+      <span class="text-sm text-slate-400">Survivor.io Community Market</span>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="max-w-6xl mx-auto px-4 py-8 grid md:grid-cols-3 gap-8">
+
+    <!-- Offer Form -->
+    <section class="md:col-span-1 bg-slate-900 rounded-xl p-6 border border-slate-800">
+      <h2 class="text-lg font-semibold mb-4">Create Offer</h2>
+
+      <form id="offerForm" class="space-y-4">
+        <input required placeholder="Player ID" id="playerId" class="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2" />
+
+        <select id="oreType" class="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2">
+          <option value="">Select Ore</option>
+          <option value="MOONSHELL_NORMAL">Moonshell Normal Ore</option>
+          <option value="MOONSHELL_FINE">Moonshell Fine Ore</option>
+          <option value="MOONSEA_SUPERIOR">Moonsea Superior Ore</option>
+          <option value="MOONSEA_EXCELLENT">Moonsea Excellent Ore</option>
+          <option value="MOONVEIL_EPIC">Moonveil Epic Ore</option>
+          <option value="MOONCORE_LEGEND">Mooncore Legend Ore</option>
+        </select>
+
+        <input type="number" id="price" placeholder="Price" class="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2" />
+
+        <p id="hint" class="text-xs text-amber-400"></p>
+
+        <button class="w-full bg-indigo-600 hover:bg-indigo-500 transition rounded py-2 font-semibold">Submit Offer</button>
+      </form>
+    </section>
+
+    <!-- Offers List -->
+    <section class="md:col-span-2 space-y-4">
+      <h2 class="text-lg font-semibold">Top Offers (Current Cycle)</h2>
+
+      <div id="offers" class="grid sm:grid-cols-2 gap-4"></div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-800 mt-10 py-6 text-center text-sm text-slate-500">
+    Event resets every 2 hours • Starts at 13:00 (Brasília Time)
+  </footer>
+
+<script>
+const API = "https://lunarminesale-production.up.railway.app/";
+
+const oreHints = {
+  MOONSHELL_NORMAL: "Offer only if price is above 225",
+  MOONSHELL_FINE: "Offer only if price is above 225",
+  MOONSEA_SUPERIOR: "Offer only if price is above 675",
+  MOONSEA_EXCELLENT: "Offer only if price is above 675",
+  MOONVEIL_EPIC: "Offer only if price is above 2250",
+  MOONCORE_LEGEND: "Offer only if price is above 6750",
+};
+
+const oreIcons = {
+  MOONSHELL_NORMAL: "https://wsrv.nl/?output=webp&url=https://garrytools.com/assets/img/survivor/4.4.0/UITexture/LabourDay/LabourMain/product_1.png",
+  MOONSHELL_FINE: "https://wsrv.nl/?output=webp&url=https://garrytools.com/assets/img/survivor/4.4.0/UITexture/LabourDay/LabourMain/product_2.png",
+  MOONSEA_SUPERIOR: "https://wsrv.nl/?output=webp&url=https://garrytools.com/assets/img/survivor/4.4.0/UITexture/LabourDay/LabourMain/product_3.png",
+  MOONSEA_EXCELLENT: "https://wsrv.nl/?output=webp&url=https://garrytools.com/assets/img/survivor/4.4.0/UITexture/LabourDay/LabourMain/product_4.png",
+  MOONVEIL_EPIC: "https://wsrv.nl/?output=webp&url=https://garrytools.com/assets/img/survivor/4.4.0/UITexture/LabourDay/LabourMain/product_5.png",
+  MOONCORE_LEGEND: "https://wsrv.nl/?output=webp&url=https://garrytools.com/assets/img/survivor/4.4.0/UITexture/LabourDay/LabourMain/product_6.png",
+};
+
+const oreSelect = document.getElementById('oreType');
+const hint = document.getElementById('hint');
+
+oreSelect.addEventListener('change', () => {
+  hint.textContent = oreHints[oreSelect.value] || '';
+});
+
+async function loadOffers() {
+  const res = await fetch(`${API}/offers`);
+  const data = await res.json();
+
+  const container = document.getElementById('offers');
+  container.innerHTML = '';
+
+  data.forEach(o => {
+    const el = document.createElement('div');
+    el.className = "bg-slate-900 border border-slate-800 rounded-xl p-4 flex gap-4 items-center";
+    el.innerHTML = `
+      <img src="${oreIcons[o.oreType]}" class="w-14 h-14" />
+      <div class="flex-1">
+        <p class="font-semibold">${o.oreType.replaceAll('_',' ')}</p>
+        <p class="text-sm text-slate-400">Player: ${o.playerId}</p>
+        <p class="text-indigo-400 font-bold">${o.price} coins</p>
+      </div>
+      <div class="flex flex-col gap-1 text-sm">
+        <button onclick="vote(${o.id}, 'up')">⬆ ${o.upVotes}</button>
+        <button onclick="vote(${o.id}, 'down')">⬇ ${o.downVotes}</button>
+      </div>
+    `;
+    container.appendChild(el);
+  });
+}
+
+async function vote(id, type) {
+  await fetch(`${API}/offers/${id}/vote`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ type })
+  });
+  loadOffers();
+}
+
+const form = document.getElementById('offerForm');
+form.addEventListener('submit', async e => {
+  e.preventDefault();
+
+  const body = {
+    playerId: playerId.value,
+    oreType: oreType.value,
+    price: Number(price.value)
+  };
+
+  await fetch(`${API}/offers`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+
+  form.reset();
+  hint.textContent = '';
+  loadOffers();
+});
+
+loadOffers();
+</script>
+</body>
+</html>
