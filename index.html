@@ -35,7 +35,7 @@
       <h2 class="text-lg font-semibold mb-4">Offers</h2>
       <div id="offers" class="grid md:grid-cols-2 gap-4"></div>
     </section>
-
+<!--
     <section class="bg-slate-900 p-6 rounded-xl border border-slate-800">
       <h2 class="text-lg font-semibold mb-4">Waitlist</h2>
 
@@ -47,7 +47,7 @@
 
       <p id="waitHash" class="text-xs text-emerald-400 mt-2"></p>
 
-      <!-- <div id="waitlist" class="grid md:grid-cols-2 gap-4 mt-6"></div>
+       <div id="waitlist" class="grid md:grid-cols-2 gap-4 mt-6"></div>
 
       <div class="flex gap-2 mt-4">
         <input id="removeHash" placeholder="Your Hash" class="bg-slate-800 p-2 rounded flex-1">
@@ -62,7 +62,8 @@
     <p>If you have a good Lunar Ore offer, submit your Player ID and price.</p>
     <p>Keep friend slots free, accept the buyer, wait ~5 minutes, then remove.</p>
     <p>Use up/down votes to show if a player is active.</p>
-    <p>Use the Waitlist to sell ores and remove yourself using your hash.</p>
+    <!-- 
+    <p>Use the Waitlist to sell ores and remove yourself using your hash.</p> -->
     <p class="mt-2">Made by <b>@mpguchii</b> on Discord</p>
   </footer>
 
@@ -126,60 +127,77 @@
       loadWait();
     }
 
-    async function loadOffers() {
+   async function loadOffers() {
   const r = await fetch(API + "/offers");
   const data = await r.json();
 
-  // 1️⃣ Agrupar por oreType
-  const grouped = data.reduce((acc, offer) => {
-    if (!acc[offer.oreType]) acc[offer.oreType] = [];
-    acc[offer.oreType].push(offer);
+  // Agrupar por oreType
+  const grouped = data.reduce((acc, o) => {
+    (acc[o.oreType] ||= []).push(o);
     return acc;
   }, {});
 
-  // 2️⃣ Ordenar cada grupo do maior preço → menor
-  Object.values(grouped).forEach(group => {
-    group.sort((a, b) => b.price - a.price);
-  });
+  // Ordenar cada grupo por maior preço
+  Object.values(grouped).forEach(g =>
+    g.sort((a, b) => b.price - a.price)
+  );
 
-  // 3️⃣ Renderizar
-  offers.innerHTML = Object.keys(grouped).map(oreType => `
-    <div class="space-y-2">
-      
-      <!-- Header do Ore -->
-      <div class="flex items-center gap-3 mt-4">
-        <img src="${oreIcons[oreType]}" class="w-8 h-8">
-        <h3 class="text-md font-semibold text-indigo-400">
-          ${oreType.replaceAll("_", " ")}
-        </h3>
-      </div>
+  offers.innerHTML = Object.keys(grouped).map((oreType, idx) => {
+    const list = grouped[oreType];
+    const bestPrice = list[0]?.price;
 
-      <!-- Offers do Ore -->
-      ${grouped[oreType].map(o => `
-        <div class="bg-slate-900 p-4 rounded border border-slate-800 flex gap-4 items-center">
-          
-          <img src="${oreIcons[o.oreType]}" class="w-14 h-14" />
+    return `
+      <div class="border border-slate-800 rounded-lg overflow-hidden">
 
-          <div class="flex-1">
-            <b>${o.oreType.replaceAll("_", " ")}</b>
-            <p class="text-sm text-slate-400">Player: ${o.playerId}</p>
-            <p class="text-indigo-400 font-bold">${o.price} coins</p>
-          </div>
+        <!-- HEADER -->
+        <button
+          onclick="toggleGroup('${oreType}')"
+          class="w-full flex items-center gap-3 p-3 bg-slate-900 hover:bg-slate-800 transition text-left"
+        >
+          <img src="${oreIcons[oreType]}" class="w-7 h-7" />
+          <span class="font-semibold text-indigo-400 flex-1">
+            ${oreType.replaceAll("_", " ")}
+          </span>
+          <span class="text-xs text-slate-400">
+            ${list.length} offer(s)
+          </span>
+          <span id="icon-${oreType}">▼</span>
+        </button>
 
-          <div class="flex flex-col gap-1 text-sm">
-            <button onclick="vote(${o.id}, 'up')" class="bg-emerald-600/20 px-2 rounded">
-              ⬆ ${o.upVotes}
-            </button>
-            <button onclick="vote(${o.id}, 'down')" class="bg-red-600/20 px-2 rounded">
-              ⬇ ${o.downVotes}
-            </button>
-          </div>
+        <!-- LIST -->
+        <div id="group-${oreType}" class="divide-y divide-slate-800">
+          ${list.map(o => `
+            <div class="
+              flex items-center gap-3 px-3 py-2 text-sm
+              ${o.price === bestPrice ? 'bg-emerald-600/10 border-l-4 border-emerald-500' : 'bg-slate-900'}
+            ">
+              <img src="${oreIcons[o.oreType]}" class="w-9 h-9" />
 
+              <div class="flex-1 leading-tight">
+                <p class="font-medium">${o.price} coins</p>
+                <p class="text-xs text-slate-400">Player ${o.playerId}</p>
+              </div>
+
+              <div class="flex flex-col gap-1 text-xs">
+                <button
+                  onclick="vote(${o.id}, 'up')"
+                  class="px-2 rounded bg-emerald-600/20 hover:bg-emerald-600/40">
+                  ⬆ ${o.upVotes}
+                </button>
+
+                <button
+                  onclick="vote(${o.id}, 'down')"
+                  class="px-2 rounded bg-red-600/20 hover:bg-red-600/40">
+                  ⬇ ${o.downVotes}
+                </button>
+              </div>
+            </div>
+          `).join("")}
         </div>
-      `).join("")}
 
-    </div>
-  `).join("");
+      </div>
+    `;
+  }).join("");
 }
 
 
@@ -203,6 +221,14 @@
         </div>`).join("");
     }
 
+    function toggleGroup(oreType) {
+  const group = document.getElementById(`group-${oreType}`);
+  const icon = document.getElementById(`icon-${oreType}`);
+
+  const hidden = group.classList.toggle("hidden");
+  icon.textContent = hidden ? "▶" : "▼";
+}
+    
     loadOffers(); 
     //loadWait();
   </script>
@@ -210,4 +236,5 @@
 </body>
 
 </html>
+
 
