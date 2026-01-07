@@ -136,7 +136,7 @@ form.addEventListener('submit', async e => {
     price: Number(price.value)
   };
 
-  await fetch(`${API}/offers`, {
+  await fetch(`${API}/offer`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body)
@@ -151,4 +151,5 @@ loadOffers();
 </script>
 </body>
 </html>
+
 
