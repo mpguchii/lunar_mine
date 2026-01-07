@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Lunar Mine – Waitlist</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-slate-950 text-slate-100">
+
+<div class="max-w-5xl mx-auto p-6 space-y-6">
+
+  <h1 class="text-2xl font-bold">🌙 Lunar Mine Waitlist</h1>
+  <p class="text-slate-400">Join the selling queue. Resets every 2 hours.</p>
+
+  <!-- JOIN -->
+  <div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
+    <input id="playerId" placeholder="Player ID"
+      class="w-full mb-2 bg-slate-800 p-2 rounded">
+
+    <select id="oreType"
+      class="w-full mb-2 bg-slate-800 p-2 rounded">
+      <option>MOONSHELL_NORMAL</option>
+      <option>MOONSHELL_FINE</option>
+      <option>MOONSEA_SUPERIOR</option>
+      <option>MOONSEA_EXCELLENT</option>
+      <option>MOONVEIL_EPIC</option>
+      <option>MOONCORE_LEGEND</option>
+    </select>
+
+    <button onclick="join()"
+      class="w-full bg-indigo-600 rounded py-2">
+      Join Waitlist
+    </button>
+  </div>
+
+  <!-- REMOVE -->
+  <button id="removeBtn"
+    onclick="removeMe()"
+    class="hidden bg-red-600 px-4 py-2 rounded">
+    Remove my entry
+  </button>
+
+  <!-- LIST -->
+  <div id="lists" class="grid md:grid-cols-2 gap-4"></div>
+
+</div>
+
+<script>
+const API = "https://lunarminesale-production.up.railway.app";
+
+async function join() {
+  const res = await fetch(API + '/waitlist', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({
+      playerId: playerId.value,
+      oreType: oreType.value
+    })
+  });
+
+  const data = await res.json();
+  if (data.token) {
+    localStorage.setItem('waitlist_token', data.token);
+    alert("Your removal token: " + data.token);
+    load();
+  }
+}
+
+async function removeMe() {
+  const token = localStorage.getItem('waitlist_token');
+  if (!token) return;
+
+  await fetch(API + '/waitlist/' + token, { method: 'DELETE' });
+  localStorage.removeItem('waitlist_token');
+  load();
+}
+
+async function load() {
+  const res = await fetch(API + '/waitlist');
+  const data = await res.json();
+
+  removeBtn.classList.toggle(
+    'hidden',
+    !localStorage.getItem('waitlist_token')
+  );
+
+  lists.innerHTML = '';
+
+  Object.entries(data).forEach(([ore, list]) => {
+    const div = document.createElement('div');
+    div.className = 'bg-slate-900 p-4 rounded-xl border border-slate-800';
+
+    div.innerHTML = `<h3 class="font-semibold mb-2">${ore}</h3>` +
+      list.map((p,i)=>`<p>#${i+1} Player ${p.player_id}</p>`).join('');
+
+    lists.appendChild(div);
+  });
+}
+
+load();
+</script>
+
+</body>
+</html>
